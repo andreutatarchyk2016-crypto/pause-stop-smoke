@@ -1,10 +1,20 @@
-import { BarChart3, Clock3, Download, ShieldCheck, ShieldX } from "lucide-react";
+import { BarChart3, Clock3, Download, Plus, ShieldCheck, ShieldX, Trash2 } from "lucide-react";
 import { Badge, Button, Card } from "@/components/ui";
 import { dayKey, formatDay, formatDuration, formatTime } from "@/lib/time";
 import { disciplineStreak, lastDays, longestGap, weekEvents } from "@/lib/stats";
 import type { AppData } from "@/types";
 
-export function StatsView({ data, now }: { data: AppData; now: number }) {
+export function StatsView({
+  data,
+  now,
+  onAdd,
+  onDelete,
+}: {
+  data: AppData;
+  now: number;
+  onAdd: () => void;
+  onDelete: (id: string) => void;
+}) {
   const week = weekEvents(data.events, now);
   const slips = week.filter((e) => !e.planned).length;
   const streak = disciplineStreak(data, now);
@@ -45,9 +55,14 @@ export function StatsView({ data, now }: { data: AppData; now: number }) {
           <div className="section-kicker">СТАТИСТИКА</div>
           <h2 className="section-title">Как идут дела</h2>
         </div>
-        <Button variant="outline" size="sm" onClick={exportCsv}>
-          <Download size={16} /> CSV
-        </Button>
+        <div className="heading-actions">
+          <Button variant="outline" size="sm" onClick={exportCsv}>
+            <Download size={16} /> CSV
+          </Button>
+          <Button variant="primary" size="sm" onClick={onAdd}>
+            <Plus size={16} /> Добавить
+          </Button>
+        </div>
       </div>
 
       <div className="stat-grid">
@@ -106,7 +121,7 @@ export function StatsView({ data, now }: { data: AppData; now: number }) {
           <span className="muted">{data.events.length} всего</span>
         </div>
         {data.events.length === 0 ? (
-          <p className="empty">Записей пока нет. Нажми «Я покурил(а)», когда сигарета догорит.</p>
+          <p className="empty">Записей пока нет. Нажми «Добавить», чтобы внести прошлые сигареты, или «Я покурил(а)» на таймере.</p>
         ) : (
           <div className="event-list">
             {[...data.events]
@@ -119,6 +134,14 @@ export function StatsView({ data, now }: { data: AppData; now: number }) {
                   <Badge tone={event.planned ? "good" : "bad"}>
                     {event.planned ? "по графику" : "срыв"}
                   </Badge>
+                  <button
+                    className="event-delete"
+                    aria-label={`Удалить запись от ${formatDay(event.at)} ${formatTime(event.at)}`}
+                    title="Удалить запись"
+                    onClick={() => onDelete(event.id)}
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               ))}
           </div>

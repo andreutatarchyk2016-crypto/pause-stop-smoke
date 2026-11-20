@@ -771,6 +771,17 @@ input, textarea { font-size: 16px; } /* iOS не увеличивает поле
 .event-time { font-weight: 600; font-size: 13px; min-width: 112px; }
 .event-time span { color: var(--faint); font-weight: 400; margin-left: 5px; font-size: 11px; }
 .event-meta { color: var(--muted); font-size: 12px; flex: 1; }
+.event-delete {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  color: var(--faint);
+}
+.event-delete:hover { color: var(--bad); border-color: rgba(242, 99, 125, 0.3); background: rgba(242, 99, 125, 0.08); }
 .review-row {
   width: 100%;
   color: var(--fg);
@@ -796,6 +807,28 @@ input, textarea { font-size: 16px; } /* iOS не увеличивает поле
 .review-done { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
 
 /* ---------- Формы ---------- */
+.heading-actions { display: flex; gap: 8px; flex: none; }
+.input {
+  width: 100%;
+  border-radius: 12px;
+  padding: 11px 13px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  color: var(--fg);
+  color-scheme: dark;
+  font-size: 14px;
+}
+.quick-times { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 9px; }
+.quick-times button {
+  padding: 6px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  font-size: 11px;
+}
+.quick-times button:hover { color: var(--fg); border-color: rgba(245, 165, 36, 0.4); }
+.form-error { color: var(--bad); font-size: 12px; margin: 12px 0 0; }
 .field-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 16px 0 8px; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .textarea {

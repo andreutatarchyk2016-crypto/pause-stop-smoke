@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BarChart3, CalendarCheck2, CheckCircle2, Cigarette, Settings as SettingsIcon, Timer, type LucideIcon } from "lucide-react";
 import { BackgroundDecor } from "@/components/BackgroundDecor";
 import { type PackPhase } from "@/components/CigarettePack";
+import { ManualEntrySheet } from "@/components/ManualEntrySheet";
 import { SettingsView } from "@/components/SettingsView";
 import { StatsView } from "@/components/StatsView";
 import { TimerView } from "@/components/TimerView";
@@ -27,6 +28,7 @@ export default function App() {
   const [now, setNow] = useState(() => Date.now());
   const [tab, setTab] = useState<Tab>("timer");
   const [reviewWeek, setReviewWeek] = useState<string | null>(null);
+  const [manualEntry, setManualEntry] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [rippleKey, setRippleKey] = useState(0);
 
@@ -120,6 +122,36 @@ export default function App() {
     setToast("Пропущено — в статистике ничего не записано");
   }
 
+  // Ручная запись может быть из прошлого: текущий отсчёт сдвигаем только если она новее.
+  function addManualEntry(entry: { at: number; planned: boolean; intervalMin: number }) {
+    setData((prev) => {
+      const events = [...prev.events, { id: crypto.randomUUID(), ...entry }].sort((a, b) => a.at - b.at);
+      const last = events.at(-1);
+      return {
+        ...prev,
+        events,
+        cycleStart: last && last.at > prev.cycleStart ? last.at : prev.cycleStart,
+      };
+    });
+    setNow(Date.now());
+    setManualEntry(false);
+    setRippleKey((key) => key + 1);
+    setToast("Запись добавлена — статистика обновлена");
+  }
+
+  function deleteEvent(id: string) {
+    if (!window.confirm("Удалить эту запись из статистики?")) return;
+    setData((prev) => {
+      const deleted = prev.events.find((event) => event.id === id);
+      const events = prev.events.filter((event) => event.id !== id);
+      const last = events.at(-1);
+      const cycleStart =
+        deleted && prev.cycleStart <= deleted.at ? (last?.at ?? prev.startedAt) : prev.cycleStart;
+      return { ...prev, events, cycleStart };
+    });
+    setToast("Запись удалена из статистики");
+  }
+
   function submitReview(review: {
     result: ReviewResult;
     slips: number;
@@ -197,7 +229,14 @@ export default function App() {
             onOpenSettings={() => setTab("settings")}
           />
         )}
-        {tab === "stats" && <StatsView data={data} now={now} />}
+        {tab === "stats" && (
+          <StatsView
+            data={data}
+            now={now}
+            onAdd={() => setManualEntry(true)}
+            onDelete={deleteEvent}
+          />
+        )}
         {tab === "weeks" && <WeeksView data={data} now={now} onOpenReview={setReviewWeek} />}
         {tab === "settings" && (
           <SettingsView
@@ -224,6 +263,15 @@ export default function App() {
           </button>
         ))}
       </nav>
+
+      {manualEntry && (
+        <ManualEntrySheet
+          now={now}
+          intervalMin={data.settings.intervalMin}
+          onClose={() => setManualEntry(false)}
+          onSave={addManualEntry}
+        />
+      )}
 
       {reviewWeek && (
         <WeeklyReviewModal
