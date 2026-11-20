@@ -11,6 +11,14 @@ export function weekEvents(events: SmokeEvent[], at: number | Date): SmokeEvent[
   return events.filter((e) => weekStartKey(e.at) === key);
 }
 
+/** Сумма сигарет в записях. Для старых данных без поля count считаем 1. */
+export function countEvents(events: SmokeEvent[], planned?: boolean): number {
+  return events.reduce((sum, event) => {
+    if (planned !== undefined && event.planned !== planned) return sum;
+    return sum + (event.count > 0 ? event.count : 1);
+  }, 0);
+}
+
 export function longestGap(events: SmokeEvent[], from: number): number {
   let previous = from;
   let best = 0;
@@ -29,7 +37,7 @@ export function disciplineStreak(data: AppData, now: number): number {
     const day = addDays(today, -i);
     if (day.getTime() < new Date(data.startedAt).setHours(0, 0, 0, 0)) break;
     const events = dayEvents(data.events, day);
-    const good = events.length <= data.settings.dailyGoal && events.every((e) => e.planned);
+    const good = countEvents(events) <= data.settings.dailyGoal && events.every((e) => e.planned);
     if (!good) break;
     streak++;
   }
@@ -44,9 +52,9 @@ export function lastDays(data: AppData, now: number, count: number) {
     return {
       key: dayKey(date),
       label: date.toLocaleDateString("ru-RU", { weekday: "short" }).replace(".", ""),
-      planned: events.filter((e) => e.planned).length,
-      slip: events.filter((e) => !e.planned).length,
-      total: events.length,
+      planned: countEvents(events, true),
+      slip: countEvents(events, false),
+      total: countEvents(events),
     };
   });
 }

@@ -12,6 +12,8 @@ export type SmokeEvent = {
   at: number;
   planned: boolean;
   intervalMin: number;
+  /** Сколько сигарет в записи: 1 для кнопки на таймере, N для ручного добавления. */
+  count: number;
 };
 
 export type WeekReview = {

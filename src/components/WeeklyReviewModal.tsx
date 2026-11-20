@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Check, X } from "lucide-react";
 import { Button, Stepper } from "@/components/ui";
 import { weekLabel } from "@/lib/time";
-import { weekEvents } from "@/lib/stats";
+import { countEvents, weekEvents } from "@/lib/stats";
 import type { AppData, ReviewResult } from "@/types";
 
 const options: { value: ReviewResult; label: string; hint: string }[] = [
@@ -29,7 +29,7 @@ export function WeeklyReviewModal({
 }) {
   const start = new Date(`${week}T00:00:00`);
   const events = weekEvents(data.events, start);
-  const actualSlips = events.filter((e) => !e.planned).length;
+  const actualSlips = countEvents(events, false);
   const existing = data.reviews.find((r) => r.weekStart === week);
 
   const [result, setResult] = useState<ReviewResult>(existing?.result ?? (actualSlips === 0 ? "good" : actualSlips <= 2 ? "partial" : "bad"));

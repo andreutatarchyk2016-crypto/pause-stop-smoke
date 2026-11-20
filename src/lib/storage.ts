@@ -48,7 +48,10 @@ export function loadData(): AppData {
         parsed.startedAt ??
         base.cycleStart,
       settings: { ...base.settings, ...parsed.settings },
-      events: Array.isArray(parsed.events) ? parsed.events : [],
+      // Старые записи были по одной сигарете без поля count — приводим к новому формату.
+      events: Array.isArray(parsed.events)
+        ? parsed.events.map((event) => ({ ...event, count: event.count > 0 ? event.count : 1 }))
+        : [],
       reviews: Array.isArray(parsed.reviews) ? parsed.reviews : [],
     };
   } catch {

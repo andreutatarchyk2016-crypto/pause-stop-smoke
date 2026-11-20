@@ -104,6 +104,7 @@ export default function App() {
       at,
       planned,
       intervalMin: data.settings.intervalMin,
+      count: 1,
     };
     setData((prev) => ({
       ...prev,
@@ -122,21 +123,27 @@ export default function App() {
     setToast("Пропущено — в статистике ничего не записано");
   }
 
-  // Ручная запись может быть из прошлого: текущий отсчёт сдвигаем только если она новее.
-  function addManualEntry(entry: { at: number; planned: boolean; intervalMin: number }) {
-    setData((prev) => {
-      const events = [...prev.events, { id: crypto.randomUUID(), ...entry }].sort((a, b) => a.at - b.at);
-      const last = events.at(-1);
-      return {
-        ...prev,
-        events,
-        cycleStart: last && last.at > prev.cycleStart ? last.at : prev.cycleStart,
-      };
-    });
-    setNow(Date.now());
+  // Ручная запись — это сигареты, выкуренные сейчас: просто число, без ввода времени.
+  function addManualEntry(entry: { count: number; planned: boolean }) {
+    const at = Date.now();
+    setData((prev) => ({
+      ...prev,
+      cycleStart: at,
+      events: [
+        ...prev.events,
+        {
+          id: crypto.randomUUID(),
+          at,
+          planned: entry.planned,
+          intervalMin: prev.settings.intervalMin,
+          count: entry.count,
+        },
+      ],
+    }));
+    setNow(at);
     setManualEntry(false);
     setRippleKey((key) => key + 1);
-    setToast("Запись добавлена — статистика обновлена");
+    setToast(`Добавлено ${entry.count} шт. — статистика обновлена`);
   }
 
   function deleteEvent(id: string) {
@@ -266,8 +273,6 @@ export default function App() {
 
       {manualEntry && (
         <ManualEntrySheet
-          now={now}
-          intervalMin={data.settings.intervalMin}
           onClose={() => setManualEntry(false)}
           onSave={addManualEntry}
         />

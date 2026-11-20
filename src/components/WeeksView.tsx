@@ -1,7 +1,7 @@
 import { CalendarCheck2, ChevronRight, ClipboardList } from "lucide-react";
 import { Badge, Button, Card } from "@/components/ui";
 import { addDays, formatDay, weekLabel, weekStart, weekStartKey } from "@/lib/time";
-import { weekEvents } from "@/lib/stats";
+import { countEvents, weekEvents } from "@/lib/stats";
 import type { AppData, ReviewResult } from "@/types";
 
 const resultLabel: Record<ReviewResult, string> = {
@@ -22,10 +22,11 @@ export function WeeksView({
   const start = weekStart(now);
   const key = weekStartKey(now);
   const events = weekEvents(data.events, now);
-  const slips = events.filter((e) => !e.planned).length;
+  const total = countEvents(events);
+  const slips = countEvents(events, false);
   const review = data.reviews.find((r) => r.weekStart === key);
   const passed = Math.min(7, Math.floor((now - start.getTime()) / 86_400_000) + 1);
-  const adherence = events.length ? Math.round(((events.length - slips) / events.length) * 100) : 100;
+  const adherence = total ? Math.round(((total - slips) / total) * 100) : 100;
 
   return (
     <div className="view">
@@ -46,7 +47,7 @@ export function WeeksView({
           <span style={{ width: `${(passed / 7) * 100}%` }} />
         </div>
         <div className="week-metrics">
-          <div><strong>{events.length}</strong><span>сигарет</span></div>
+          <div><strong>{total}</strong><span>сигарет</span></div>
           <div><strong>{slips}</strong><span>срывов</span></div>
           <div><strong>{adherence}%</strong><span>по графику</span></div>
         </div>

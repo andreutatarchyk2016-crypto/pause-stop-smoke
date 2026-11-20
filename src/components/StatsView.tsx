@@ -1,7 +1,7 @@
 import { BarChart3, Clock3, Download, Plus, ShieldCheck, ShieldX, Trash2 } from "lucide-react";
 import { Badge, Button, Card } from "@/components/ui";
 import { dayKey, formatDay, formatDuration, formatTime } from "@/lib/time";
-import { disciplineStreak, lastDays, longestGap, weekEvents } from "@/lib/stats";
+import { countEvents, disciplineStreak, lastDays, longestGap, weekEvents } from "@/lib/stats";
 import type { AppData } from "@/types";
 
 export function StatsView({
@@ -16,7 +16,8 @@ export function StatsView({
   onDelete: (id: string) => void;
 }) {
   const week = weekEvents(data.events, now);
-  const slips = week.filter((e) => !e.planned).length;
+  const slips = countEvents(week, false);
+  const totalSmoked = countEvents(data.events);
   const streak = disciplineStreak(data, now);
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
@@ -27,7 +28,7 @@ export function StatsView({
 
   function exportCsv() {
     const lines = [
-      "дата;время;статус;интервал_мин",
+      "дата;время;статус;интервал_мин;кол-во",
       ...[...data.events]
         .sort((a, b) => a.at - b.at)
         .map((e) =>
@@ -36,6 +37,7 @@ export function StatsView({
             formatTime(e.at),
             e.planned ? "по графику" : "срыв",
             e.intervalMin,
+            e.count || 1,
           ].join(";"),
         ),
     ];
@@ -83,7 +85,7 @@ export function StatsView({
         </Card>
         <Card className="mini-stat">
           <BarChart3 size={18} className="stat-icon stat-icon-warn" />
-          <div className="stat-value">{week.length}</div>
+          <div className="stat-value">{countEvents(week)}</div>
           <div className="stat-label">сигарет за неделю</div>
         </Card>
       </div>
@@ -118,10 +120,10 @@ export function StatsView({
       <Card>
         <div className="card-title-row">
           <h3>Последние записи</h3>
-          <span className="muted">{data.events.length} всего</span>
+          <span className="muted">{totalSmoked} шт. всего</span>
         </div>
         {data.events.length === 0 ? (
-          <p className="empty">Записей пока нет. Нажми «Добавить», чтобы внести прошлые сигареты, или «Я покурил(а)» на таймере.</p>
+          <p className="empty">Записей пока нет. Нажми «Добавить», чтобы внести сигареты, или «Я покурил(а)» на таймере.</p>
         ) : (
           <div className="event-list">
             {[...data.events]
@@ -129,7 +131,7 @@ export function StatsView({
               .slice(0, 8)
               .map((event) => (
                 <div className="event-row" key={event.id}>
-                  <div className="event-time">{formatTime(event.at)} <span>{formatDay(event.at)}</span></div>
+                  <div className="event-time">{formatDay(event.at)} <span>{event.count || 1} шт.</span></div>
                   <div className="event-meta">интервал {event.intervalMin} мин</div>
                   <Badge tone={event.planned ? "good" : "bad"}>
                     {event.planned ? "по графику" : "срыв"}
