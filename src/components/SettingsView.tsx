@@ -111,13 +111,16 @@ export function SettingsView({
           </button>
         </div>
 
-        {enabled && (
-          <div className="notification-actions">
-            <Button variant="ghost" size="sm" onClick={onTestNotifications}>
-              <BellRing size={16} /> Проверить уведомление
-            </Button>
-          </div>
-        )}
+        <div className="notification-actions">
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={notificationsBusy || notificationState === "unsupported"}
+            onClick={onTestNotifications}
+          >
+            <BellRing size={16} /> {enabled ? "Проверить уведомление" : "Включить и проверить"}
+          </Button>
+        </div>
 
         {enabled && (
           <div className="notification-reminder">

@@ -376,6 +376,7 @@ input, textarea { font-size: 16px; } /* iOS не увеличивает поле
 }
 .button:hover { transform: translateY(-1px); background: rgba(255, 255, 255, 0.12); }
 .button:active { transform: scale(0.98); }
+.button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 .button-sm { padding: 8px 15px; font-size: 12px; }
 .button-primary {
   color: #ffe7b8;

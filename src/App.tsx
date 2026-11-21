@@ -121,6 +121,23 @@ export default function App() {
         ? "on"
         : "off";
 
+  async function enableNotifications(): Promise<boolean> {
+    if (notificationBusy) return false;
+    setNotificationBusy(true);
+    try {
+      await requestNotifications();
+      setPermission(notificationState());
+      updateSettings({ pushEnabled: true });
+      return true;
+    } catch (error) {
+      setPermission(notificationState());
+      setToast(error instanceof Error ? error.message : "Не удалось включить уведомления");
+      return false;
+    } finally {
+      setNotificationBusy(false);
+    }
+  }
+
   async function toggleNotifications() {
     if (notificationBusy) return;
     if (data.settings.pushEnabled) {
@@ -128,21 +145,19 @@ export default function App() {
       setToast("Уведомления выключены");
       return;
     }
-    setNotificationBusy(true);
-    try {
-      await requestNotifications();
-      setPermission(notificationState());
-      updateSettings({ pushEnabled: true });
-      setToast("Уведомления включены");
-    } catch (error) {
-      setPermission(notificationState());
-      setToast(error instanceof Error ? error.message : "Не удалось включить уведомления");
-    } finally {
-      setNotificationBusy(false);
-    }
+    if (await enableNotifications()) setToast("Уведомления включены");
   }
 
   async function sendTestNotification() {
+    if (notificationStatus === "denied") {
+      setToast("Разрешите уведомления для сайта в настройках браузера");
+      return;
+    }
+    if (notificationStatus === "unsupported") {
+      setToast("Этот браузер не поддерживает уведомления");
+      return;
+    }
+    if (notificationStatus !== "on" && !(await enableNotifications())) return;
     const sent = await showLocalNotification(
       "Тест уведомлений",
       "Если вы это видите — уведомления работают.",
