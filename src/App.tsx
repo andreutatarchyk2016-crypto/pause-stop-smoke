@@ -9,6 +9,13 @@ import { TimerView } from "@/components/TimerView";
 import { WeeksView } from "@/components/WeeksView";
 import { WeeklyReviewModal } from "@/components/WeeklyReviewModal";
 import { Segmented } from "@/components/ui";
+import {
+  notificationState,
+  requestNotifications,
+  scheduleLocalNotifications,
+  showLocalNotification,
+  type NotificationState,
+} from "@/lib/notifications";
 import { SMOKE_WINDOW_MS } from "@/lib/schedule";
 import { phaseColor } from "@/lib/phase";
 import { addDays, weekStart, weekStartKey } from "@/lib/time";
@@ -31,6 +38,8 @@ export default function App() {
   const [manualEntry, setManualEntry] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [rippleKey, setRippleKey] = useState(0);
+  const [permission, setPermission] = useState<NotificationState>(() => notificationState());
+  const [notificationBusy, setNotificationBusy] = useState(false);
 
   useEffect(() => saveData(data), [data]);
 
@@ -48,6 +57,14 @@ export default function App() {
       document.removeEventListener("visibilitychange", tick);
     };
   }, []);
+
+  useEffect(() => {
+    setPermission(notificationState());
+  }, []);
+
+  // Пока приложение открыто, напоминания работают через localStorage-расписание.
+  // Фоновая доставка подключается отдельно, когда доступен push-сервис.
+  useEffect(() => scheduleLocalNotifications(data, showLocalNotification), [data]);
 
   // Опрос за прошедшую неделю — один раз, при открытии приложения.
   useEffect(() => {
@@ -95,6 +112,34 @@ export default function App() {
 
   function updateSettings(patch: Partial<Settings>) {
     setData((prev) => ({ ...prev, settings: { ...prev.settings, ...patch } }));
+  }
+
+  const notificationStatus: NotificationState =
+    permission === "unsupported" || permission === "denied"
+      ? permission
+      : data.settings.pushEnabled && permission === "on"
+        ? "on"
+        : "off";
+
+  async function toggleNotifications() {
+    if (notificationBusy) return;
+    if (data.settings.pushEnabled) {
+      updateSettings({ pushEnabled: false });
+      setToast("Уведомления выключены");
+      return;
+    }
+    setNotificationBusy(true);
+    try {
+      await requestNotifications();
+      setPermission(notificationState());
+      updateSettings({ pushEnabled: true });
+      setToast("Уведомления включены");
+    } catch (error) {
+      setPermission(notificationState());
+      setToast(error instanceof Error ? error.message : "Не удалось включить уведомления");
+    } finally {
+      setNotificationBusy(false);
+    }
   }
 
   function logSmoke(planned: boolean) {
@@ -248,7 +293,10 @@ export default function App() {
         {tab === "settings" && (
           <SettingsView
             data={data}
+            notificationState={notificationStatus}
+            notificationsBusy={notificationBusy}
             onSettings={updateSettings}
+            onToggleNotifications={toggleNotifications}
             onReset={reset}
           />
         )}
