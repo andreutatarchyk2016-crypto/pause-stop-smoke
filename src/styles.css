@@ -348,6 +348,8 @@ input, textarea { font-size: 16px; } /* iOS не увеличивает поле
 .toggle.is-on .toggle-track { background: rgba(245, 165, 36, 0.35); }
 .toggle.is-on .toggle-knob { transform: translateX(22px); background: #ffd166; }
 .toggle:disabled { opacity: 0.45; cursor: not-allowed; }
+.notification-actions { display: flex; margin-top: 10px; }
+.notification-actions .button { min-height: 40px; }
 .notification-reminder { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
 .notification-reminder > span { color: var(--muted); font-size: 12px; }
 .notification-help { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 12px 0 0; }

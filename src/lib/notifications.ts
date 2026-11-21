@@ -39,20 +39,34 @@ export async function requestNotifications(): Promise<void> {
   if (result !== "granted") throw new Error("Разрешите уведомления в настройках браузера");
 }
 
-export function showLocalNotification(title: string, body: string, tag = "pause"): void {
-  if (notificationState() !== "on") return;
+export async function showLocalNotification(
+  title: string,
+  body: string,
+  tag = "pause",
+): Promise<boolean> {
+  if (notificationState() !== "on") return false;
   const options: NotificationOptions = {
     body,
     icon: `${BASE}icon.svg`,
     badge: `${BASE}icon.svg`,
     tag,
   };
-  if ("serviceWorker" in navigator) {
-    void navigator.serviceWorker.ready
-      .then((registration) => registration.showNotification(title, options))
-      .catch(() => new Notification(title, options));
-  } else {
-    new Notification(title, options);
+  try {
+    if ("serviceWorker" in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(title, options);
+    } else {
+      new Notification(title, options);
+    }
+    return true;
+  } catch {
+    // Некоторые браузеры не дают Service Worker показывать уведомление — пробуем напрямую.
+    try {
+      new Notification(title, options);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }
 

@@ -142,6 +142,15 @@ export default function App() {
     }
   }
 
+  async function sendTestNotification() {
+    const sent = await showLocalNotification(
+      "Тест уведомлений",
+      "Если вы это видите — уведомления работают.",
+      "test",
+    );
+    setToast(sent ? "Тестовое уведомление показано" : "Не удалось показать уведомление");
+  }
+
   function logSmoke(planned: boolean) {
     const at = Date.now();
     const event = {
@@ -297,6 +306,7 @@ export default function App() {
             notificationsBusy={notificationBusy}
             onSettings={updateSettings}
             onToggleNotifications={toggleNotifications}
+            onTestNotifications={sendTestNotification}
             onReset={reset}
           />
         )}

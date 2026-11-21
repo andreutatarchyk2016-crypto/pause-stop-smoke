@@ -1,4 +1,4 @@
-import { Bell, BellOff, RotateCcw, ShieldCheck } from "lucide-react";
+import { Bell, BellOff, BellRing, RotateCcw, ShieldCheck } from "lucide-react";
 import { Badge, Button, Card, Stepper } from "@/components/ui";
 import { needsHomeScreen, type NotificationState } from "@/lib/notifications";
 import type { AppData } from "@/types";
@@ -18,6 +18,7 @@ export function SettingsView({
   notificationsBusy,
   onSettings,
   onToggleNotifications,
+  onTestNotifications,
   onReset,
 }: {
   data: AppData;
@@ -25,6 +26,7 @@ export function SettingsView({
   notificationsBusy: boolean;
   onSettings: (patch: Partial<AppData["settings"]>) => void;
   onToggleNotifications: () => void;
+  onTestNotifications: () => void;
   onReset: () => void;
 }) {
   const enabled = notificationState === "on";
@@ -108,6 +110,14 @@ export function SettingsView({
             <span className="toggle-track"><span className="toggle-knob" /></span>
           </button>
         </div>
+
+        {enabled && (
+          <div className="notification-actions">
+            <Button variant="ghost" size="sm" onClick={onTestNotifications}>
+              <BellRing size={16} /> Проверить уведомление
+            </Button>
+          </div>
+        )}
 
         {enabled && (
           <div className="notification-reminder">
